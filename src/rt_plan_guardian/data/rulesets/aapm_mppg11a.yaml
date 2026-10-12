@@ -1,0 +1,55 @@
+# AAPM Medical Physics Practice Guideline 11.a - initial plan review profile.
+#
+# MPPG 11.a (open access, CC BY 4.0) lists the items a physicist verifies at initial review of an
+# external-beam (photon/electron) or HDR brachytherapy plan: Table 8 (EBRT, physicists), Table 9
+# (EBRT, therapists - incl. electron applicator/cone/block), Table 7 (brachytherapy). This profile
+# marks the items RT-Plan Guardian CAN verify from DICOM-RT files as blocking, as the guideline
+# treats them (e.g. "Treatments shall not proceed if the approval status is revoked").
+#
+# Items that need other information (independent secondary dose calculation, collision check,
+# simulation documents, the oncology EMR) cannot be checked from DICOM and are listed in
+# docs/standards-provenance.md as NOT covered. This is a mapping of a guideline onto automated
+# checks, not an endorsement of the tool by AAPM and not a substitute for the full review.
+#
+# Proton plans are outside MPPG 11.a's scope ("proton plans are excluded"); ION-* rules still run
+# from the default ruleset but are not guideline-derived.
+
+ruleset:
+  name: AAPM MPPG 11.a initial plan review
+  version: "1.0.0"
+  extends: default
+  description: >-
+    Blocking severity for the MPPG 11.a Table 7/8/9 items that DICOM-RT files can verify:
+    patient identity, approval status, prescription vs plan dose, machine, fractionation,
+    field/MU parameters, applicator/cutout (electron), source strength vs decay and channel
+    parameters (HDR brachytherapy).
+  sources:
+    - "AAPM MPPG 11.a: Plan and chart review in external beam radiotherapy and brachytherapy. J Appl Clin Med Phys 2021;22(9):4-19. doi:10.1002/acm2.13366 (CC BY 4.0)"
+
+rules:
+  IDENT-002:
+    severity: error        # Table 8: patient name, MRN and DOB are all verified
+  PLAN-001:
+    severity: error        # Table 8/7: plan approved by physician and physicist; sec. 3.1.4: revoked => do not treat
+    params:
+      allowed_statuses: [APPROVED]
+  PLAN-004:
+    severity: error        # Table 8/7: prescription matches plan; fractional and total dose agree
+  PLAN-005:
+    severity: error        # Table 8: treatment scheduled on the correct machine (set allowed_machines)
+  PLAN-003:
+    severity: error        # Table 8: schedule agrees with prescription (fractions)
+  BEAM-005:
+    severity: error        # Table 8: deliverability - maximum MU for high-dose fields
+  BEAM-008:
+    severity: error        # Table 8: field parameters (collimator/jaw/MLC) reasonable and consistent
+  ELEC-001:
+    severity: error        # Table 9: electron applicator / cone
+  ELEC-002:
+    severity: error        # Table 9: electron block (cutout) code
+  BRACHY-004:
+    severity: error        # Table 7: source strength checked against the decay table
+    params:
+      max_source_age_days: 120.0   # example for Ir-192 on a quarterly exchange; set for your source
+  BRACHY-006:
+    severity: error        # Table 7: step size, number and first dwell position

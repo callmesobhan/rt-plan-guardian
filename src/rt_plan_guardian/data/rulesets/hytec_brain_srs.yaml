@@ -1,0 +1,39 @@
+# HyTEC - single-fraction brain radiosurgery normal-tissue volume constraint.
+#
+# Source: Milano MT, Grimm J, Niemierko A, et al. Single- and multifraction stereotactic
+# radiosurgery dose/volume tolerances of the brain. Int J Radiat Oncol Biol Phys 2021;110(1):68-86
+# (online 2020), doi:10.1016/j.ijrobp.2020.08.013 (AAPM HyTEC; PMC9387178 author manuscript).
+#
+# What the paper states (Section 8, as read for this ruleset): the QUANTEC recommendation to limit
+# single-fraction V12Gy to <= 5-10 cc remains prudent; the risk of symptomatic necrosis with a V12
+# of 10 cc is on the order of 15% after SRS for brain metastases; the UK consensus recommends
+# < 12 Gy in 1 fraction to 10 cc of brain minus GTV. The paper gives NO brainstem, optic-pathway or
+# cochlear dose-volume limits (it defers those), so this ruleset contains none.
+#
+# Scope: single-fraction SRS of brain metastases/targets. It encodes the 10 cc upper bound (the
+# top of the QUANTEC range). To apply the stricter 5 cc end, override DVH-001 in your own ruleset.
+# Requires an ROI named "Brain" (TG-263) and subtracts ROIs whose names start with GTV, CTV, ITV,
+# PTV or TV. If no Brain ROI exists the constraint FAILS: an unverifiable limit is not a met one.
+
+ruleset:
+  name: HyTEC single-fraction brain SRS - normal brain V12Gy
+  version: "1.0.0"
+  extends: default
+  description: >-
+    Normal brain (brain minus target) V12Gy <= 10 cc for single-fraction stereotactic radiosurgery.
+  sources:
+    - "Milano MT et al. HyTEC: single- and multifraction SRS dose/volume tolerances of the brain. Int J Radiat Oncol Biol Phys 2021;110(1):68-86. doi:10.1016/j.ijrobp.2020.08.013 (Sec. 8; QUANTEC V12Gy <= 5-10 cc; UK consensus < 12 Gy to 10 cc of brain minus GTV)"
+
+rules:
+  DVH-001:
+    severity: warning     # a risk-based tolerance, not a hard physical limit
+    params:
+      constraints:
+        - id: HYTEC-BRAIN-V12-10CC
+          roi: ["^Brain$"]
+          exclude: ["^(GTV|CTV|ITV|PTV|TV)"]
+          metric: V12Gy
+          op: "<="
+          limit: 10
+          unit: cc
+          source: "HyTEC (Milano 2021) Sec. 8: single-fraction V12Gy <= 5-10 cc (QUANTEC); UK consensus <12 Gy to 10 cc of brain minus GTV"

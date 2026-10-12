@@ -1,0 +1,33 @@
+# AAPM TG-263 structure-naming conformance.
+#
+# Source: Mayo CS et al. AAPM Task Group 263: Standardizing nomenclatures in radiation oncology.
+# Int J Radiat Oncol Biol Phys 2018;100(4):1057-1066 (executive summary, open access: doi:10.1016/j.ijrobp.2017.12.013), and the TG-263 nomenclature worksheet
+# (717 names in version 20170815, every primary name <= 16 characters).
+#
+# The worksheet is NOT bundled (AAPM states no reuse licence). Download it from
+# https://www.aapm.org/pubs/reports/RPT_263_Supplemental/ and convert it:
+#     python scripts/tg263_xls_to_txt.py TG263_Nomenclature_Worksheet_20170815.xls tg263_names.txt
+#     export RTPG_NOMENCLATURE_FILE=$PWD/tg263_names.txt     # or set nomenclature_file below
+# Without a list the rule reports NOT_APPLICABLE.
+#
+# `additional_allowed_patterns` is this tool's encoding of TG-263's target-name scheme
+# (GTV/CTV/ITV/PTV with free suffixes such as a dose) and planning-structure prefix (z) - these are
+# NOT worksheet entries; review them against the report before adopting them.
+
+ruleset:
+  name: AAPM TG-263 structure naming
+  version: "1.0.0"
+  extends: default
+  description: ROI names must be TG-263 primary names (or a target/planning pattern), at most 16 characters.
+  sources:
+    - "Mayo CS et al. AAPM TG-263: Standardizing nomenclatures in radiation oncology. Int J Radiat Oncol Biol Phys 2018;100(4):1057-1066, doi:10.1016/j.ijrobp.2017.12.013 (nomenclature worksheet 20170815)"
+
+rules:
+  STRUCT-006:
+    severity: warning
+    params:
+      max_name_length: 16
+      case_sensitive: true
+      additional_allowed_patterns:
+        - "^(GTV|CTV|ITV|IGTV|PTV)[A-Za-z0-9_+\\-]*$"
+        - "^z[A-Za-z0-9_+\\-]*$"

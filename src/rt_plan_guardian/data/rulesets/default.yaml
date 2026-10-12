@@ -1,0 +1,90 @@
+# RT-Plan Guardian - default ruleset for photon external-beam plans.
+#
+# Every rule runs even if not listed here (with its built-in defaults). List a rule only to
+# change its severity, switch it off, or tune its parameters. Unknown rule ids or parameter
+# names are rejected on load so a typo can never silently disable a check.
+#
+# Principle for severities:
+#   error   - the data is inconsistent, impossible or unsafe to deliver
+#   warning - outside a clinical/technical expectation; a human decides
+#
+# THIS FILE IS A STARTING POINT, NOT A CLINICAL STANDARD. Every threshold below must be
+# reviewed and owned by your clinic's qualified medical physicist.
+
+ruleset:
+  name: RT-Plan Guardian default
+  version: "0.2.0"
+  description: >-
+    Generic consistency review for photon, electron, proton/ion and brachytherapy plans.
+    Structural expectations come from the DICOM Standard; thresholds are placeholders.
+  sources:
+    - "DICOM Standard PS3.3 (RT Plan, RT Ion Plan, RT Structure Set, RT Dose IODs and modules), NEMA"
+    - "AAPM MPPG 11.a, J Appl Clin Med Phys 2021;22(9):4-19, doi:10.1002/acm2.13366 (CC BY 4.0), Tables 7-9: initial plan-review items"
+
+rules:
+  INPUT-001:
+    params:
+      required: [rtplan, rtstruct, rtdose]
+
+  STRUCT-002:
+    params:
+      # Case-insensitive regexes searched in ROI names, e.g. ["^PTV", "^(BODY|EXTERNAL)$"].
+      # Empty by default: naming is site policy (see the TG-263 rule STRUCT-006 for standard names).
+      required_roi_patterns: []
+
+  STRUCT-003:
+    params:
+      ignore_patterns: ["^(z|opt|ring)"]   # helper structures that may legitimately be empty
+
+  PLAN-001:
+    severity: warning
+    params:
+      allowed_statuses: [APPROVED]
+
+  PLAN-003:
+    params:
+      min_fractions: 1
+      max_fractions: 60
+
+  PLAN-004:
+    params:
+      tolerance_percent: 1.0
+
+  PLAN-005:
+    params:
+      allowed_machines: []          # e.g. [LINAC1, LINAC2] to whitelist commissioned machines
+      require_single_machine: true
+
+  BEAM-004:
+    params:
+      allowed_energies: {}        # e.g. {PHOTON: [6, 10, 15], ELECTRON: [6, 9, 12]}
+
+  BEAM-005:
+    params:
+      limits: {MU: [1.0, 2000.0], MINUTE: [0.0, 120.0], NP: [0.0, 1.0e+15]}
+
+  BEAM-006:
+    severity: warning
+    params:
+      target_patterns: ["^PTV"]
+
+  BEAM-007:
+    params:
+      min_leaf_gap_mm: 0.0
+      max_abs_position_mm: 200.0
+
+  DOSE-003:
+    severity: warning
+    params:
+      max_spacing_mm: 3.0
+
+  DOSE-004:
+    severity: warning
+    params:
+      max_percent_of_rx: 110.0
+
+  DOSE-006:
+    severity: warning
+    params:
+      volume_percent: 95.0
+      min_percent_of_rx: 95.0

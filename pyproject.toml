@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rt-plan-guardian"
+dynamic = ["version"]
+description = "Automated radiotherapy plan consistency & safety checker for DICOM-RT, with auditable rule-by-rule reports."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["radiotherapy", "DICOM-RT", "pydicom", "quality assurance", "medical physics"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+dependencies = [
+    "pydicom>=3.0,<4",
+    "numpy>=1.24",
+    "PyYAML>=6.0",
+    "Jinja2>=3.1",
+]
+
+[project.optional-dependencies]
+app = ["streamlit>=1.35", "pandas>=2.0"]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.5", "mypy>=1.10", "types-PyYAML"]
+
+[project.scripts]
+rtpg = "rt_plan_guardian.cli:main"
+
+[tool.hatch.version]
+path = "src/rt_plan_guardian/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rt_plan_guardian"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = ["realdata: needs the open-access datasets (see docs/data-sources.md; set RTPG_REAL_DATA)"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF012", "E501"]  # E501: `ruff format` owns code wrapping; long rule-description strings are intentional
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+check_untyped_defs = true
+files = ["src"]
+
+# synthetic.py mutates datasets it knows are present (that is the point of fault injection);
+# the Optional typing of SyntheticCase fields exists only to model "file missing" defects.
+[[tool.mypy.overrides]]
+module = ["rt_plan_guardian.synthetic", "rt_plan_guardian.synthetic.*"]
+disable_error_code = ["union-attr", "arg-type"]

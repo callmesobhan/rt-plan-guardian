@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RT-Plan Guardian report - {{ r.verdict }}</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --ink: #1b2330; --muted: #5b6577; --line: #dde2ea;
+    --pass: #137a3d; --pass-bg: #e3f4ea; --fail: #b42318; --fail-bg: #fde8e6;
+    --warn: #8a5a00; --warn-bg: #fff3d6; --skip: #3b4a63; --skip-bg: #e6ebf3;
+    --na: #5b6577; --na-bg: #eef0f4; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11151c; --card: #1a202b; --ink: #e8ecf3; --muted: #9aa5b8; --line: #2c3442;
+      --pass: #6fdc9a; --pass-bg: #123222; --fail: #ff8d82; --fail-bg: #3a1815;
+      --warn: #f4c65a; --warn-bg: #3a2d0e; --skip: #a9bbdb; --skip-bg: #232c3d;
+      --na: #9aa5b8; --na-bg: #232935;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 32px 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+  .verdict { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 600;
+           font-size: 12px; letter-spacing: .03em; white-space: nowrap; }
+  .verdict .badge { font-size: 16px; padding: 6px 16px; }
+  .PASS, .PASS_WITH_WARNINGS.p { background: var(--pass-bg); color: var(--pass); }
+  .FAIL { background: var(--fail-bg); color: var(--fail); }
+  .WARN, .PASS_WITH_WARNINGS { background: var(--warn-bg); color: var(--warn); }
+  .INCOMPLETE, .ERROR { background: var(--fail-bg); color: var(--fail); }
+  .SKIPPED { background: var(--skip-bg); color: var(--skip); }
+  .NOT_APPLICABLE, .DISABLED { background: var(--na-bg); color: var(--na); }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .chip { border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; min-width: 88px; }
+  .chip b { display: block; font-size: 20px; line-height: 1.2; }
+  .chip span { color: var(--muted); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  td.mono, .mono { font-family: var(--mono); font-size: 12.5px; word-break: break-all; }
+  .scroll { overflow-x: auto; }
+  details { border: 1px solid var(--line); border-radius: 10px; background: var(--card); margin: 10px 0; }
+  summary { cursor: pointer; padding: 12px 16px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  summary .rid { font-family: var(--mono); font-weight: 600; }
+  details > .body { padding: 0 16px 14px; }
+  .why { color: var(--muted); margin: 0 0 10px; }
+  .bad td:first-child { border-left: 3px solid var(--fail); }
+  .ok td:first-child { border-left: 3px solid var(--pass); }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+  dt { color: var(--muted); } dd { margin: 0; word-break: break-all; }
+  footer { margin-top: 36px; color: var(--muted); font-size: 13px; }
+  @media print { details { break-inside: avoid; } details[open] summary { page-break-after: avoid; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>RT-Plan Guardian review report</h1>
+  <p class="sub">Generated {{ r.run.generated_at }} &middot; {{ r.tool.name }} {{ r.tool.version }} &middot; case <span class="mono">{{ r.case_id }}</span> &middot; technique: {{ r.techniques|join(", ") or "none detected" }}</p>
+
+  <section class="card verdict-card">
+    <div class="verdict">
+      <span class="badge {{ r.verdict }}">{{ r.verdict.replace('_', ' ') }}</span>
+      <span>{{ verdict_text }}</span>
+    </div>
+    <div class="chips">
+      <div class="chip"><b>{{ r.summary.pass }}</b><span>passed</span></div>
+      <div class="chip"><b>{{ r.summary.fail_error }}</b><span>failed (error)</span></div>
+      <div class="chip"><b>{{ r.summary.fail_warning }}</b><span>warnings</span></div>
+      <div class="chip"><b>{{ r.summary.skipped }}</b><span>not evaluated</span></div>
+      <div class="chip"><b>{{ r.summary.error }}</b><span>rule crashed</span></div>
+      <div class="chip"><b>{{ r.summary.not_applicable }}</b><span>n/a</span></div>
+      <div class="chip"><b>{{ r.summary.disabled }}</b><span>disabled</span></div>
+    </div>
+  </section>
+
+  <h2>Findings</h2>
+  {% if not findings %}
+  <div class="card">No failed rules.</div>
+  {% endif %}
+  {% for x in findings %}
+  <details open>
+    <summary>
+      <span class="badge {{ x|label }}">{{ x|label }}</span>
+      <span class="rid">{{ x.rule_id }}</span>
+      <strong>{{ x.title }}</strong>
+      <span class="sub" style="margin:0">{{ x.summary }}</span>
+    </summary>
+    <div class="body">
+      {% if x.reference %}<p class="why">Reference: {{ x.reference }}</p>{% endif %}
+      <div class="scroll"><table>
+        <tr><th>Check</th><th>Observed</th><th>Expected</th><th>Note</th></tr>
+        {% for c in x.checks if not c.ok %}
+        <tr class="bad"><td>{{ c.subject }}</td><td class="mono">{{ c.observed|show }}</td>
+            <td class="mono">{{ c.expected|show }}</td><td>{{ c.note }}</td></tr>
+        {% endfor %}
+      </table></div>
+    </div>
+  </details>
+  {% endfor %}
+
+  {% if not_run %}
+  <h2>Not evaluated</h2>
+  <div class="card scroll"><table>
+    <tr><th>Rule</th><th>Status</th><th>Reason</th></tr>
+    {% for x in not_run %}
+    <tr><td class="mono">{{ x.rule_id }}</td><td><span class="badge {{ x.status }}">{{ x.status }}</span></td><td>{{ x.summary }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% endif %}
+
+  <h2>Full audit trail</h2>
+  <p class="sub">Every rule in the ruleset, in execution order, with the individual checks behind each result.</p>
+  {% for x in r.results %}
+  <details>
+    <summary>
+      <span class="badge {{ x|label }}">{{ x|label }}</span>
+      <span class="rid">{{ x.rule_id }}</span>
+      <span>{{ x.title }}</span>
+      <span class="sub" style="margin:0">{{ x.severity }} &middot; {{ x.summary }}</span>
+    </summary>
+    <div class="body">
+      <p class="why">{{ x.category }}{% if x.reference %} &middot; {{ x.reference }}{% endif %}</p>
+      {% if x.params %}<p class="why">Parameters: <span class="mono">{{ x.params|show }}</span></p>{% endif %}
+      {% if x.checks %}
+      <div class="scroll"><table>
+        <tr><th>Check</th><th>Observed</th><th>Expected</th><th>Note</th></tr>
+        {% for c in x.checks %}
+        <tr class="{{ 'ok' if c.ok else 'bad' }}"><td>{{ c.subject }}</td><td class="mono">{{ c.observed|show }}</td>
+            <td class="mono">{{ c.expected|show }}</td><td>{{ c.note }}</td></tr>
+        {% endfor %}
+      </table></div>
+      {% endif %}
+    </div>
+  </details>
+  {% endfor %}
+
+  <h2>Provenance</h2>
+  <div class="card">
+    <dl>
+      <dt>Ruleset</dt><dd>{{ r.ruleset.name }} v{{ r.ruleset.version }} &mdash; <span class="mono">{{ r.ruleset.source }}</span></dd>
+      {% if r.ruleset.sha256 %}<dt>Ruleset SHA-256</dt><dd class="mono">{{ r.ruleset.sha256 }}</dd>{% endif %}
+      <dt>Content SHA-256</dt><dd class="mono">{{ r.content_sha256 }}</dd>
+      <dt>Environment</dt><dd>python {{ r.run.environment.python }}, pydicom {{ r.run.environment.pydicom }}, numpy {{ r.run.environment.numpy }}</dd>
+    </dl>
+    <h3 style="font-size:14px;margin:18px 0 8px">Inputs</h3>
+    <div class="scroll"><table>
+      <tr><th>Kind</th><th>File</th><th>SOP Instance UID</th><th>SHA-256</th></tr>
+      {% for i in r.inputs %}
+      <tr><td>{{ i.kind|upper }}</td><td class="mono">{{ i.filename }}</td><td class="mono">{{ i.sop_instance_uid }}</td><td class="mono">{{ i.sha256 }}</td></tr>
+      {% endfor %}
+    </table></div>
+    {% if ignored_groups %}
+    <h3 style="font-size:14px;margin:18px 0 8px">Ignored (not reviewed)</h3>
+    <ul>{% for reason, names in ignored_groups %}<li>{{ names|length }} file(s) &mdash; {{ reason }} <span class="mono">({{ names[:3]|join(', ') }}{% if names|length > 3 %}, &hellip;{% endif %})</span></li>{% endfor %}</ul>
+    {% endif %}
+    {% if r.unassigned_files %}
+    <h3 style="font-size:14px;margin:18px 0 8px">Supplied RT objects not part of this case</h3>
+    <ul>{% for i in r.unassigned_files %}<li><span class="mono">{{ i.filename }}</span> &mdash; {{ i.reason }}</li>{% endfor %}</ul>
+    {% endif %}
+  </div>
+
+  <footer>{{ disclaimer }} This report contains patient identifiers; handle it as PHI.</footer>
+</main>
+</body>
+</html>
