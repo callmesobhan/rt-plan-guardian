@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Generated output
+demo_out/
+reports/
+open_data/
+tg263_names.txt
+
+# ---------------------------------------------------------------------------
+# PATIENT DATA MUST NEVER BE COMMITTED.
+# Real DICOM and generated reports contain PHI. Tests use synthetic data
+# built in code (rt_plan_guardian.synthetic), so no DICOM fixtures are needed.
+# ---------------------------------------------------------------------------
+*.dcm
+*.DCM
+*.rtplan
+*.rtstruct
+*.rtdose
+DICOMDIR
+/data/

@@ -1,0 +1,57 @@
+# EXAMPLE ONLY - an illustration of how a site might tighten the default ruleset for
+# lung SBRT. The numbers are placeholders chosen to show the mechanism, NOT clinical
+# guidance. Your qualified medical physicist must set and own every value.
+#
+#   rtpg check /path/to/case --config configs/example_site_sbrt.yaml --out reports/
+
+ruleset:
+  name: Example site - lung SBRT
+  version: "0.1.0"
+  description: Tighter geometry/delivery limits and a whitelisted machine.
+
+rules:
+  STRUCT-002:
+    severity: error
+    params:
+      required_roi_patterns:
+        - "^PTV"
+        - "^(BODY|EXTERNAL)$"
+        - "^(SpinalCord|Cord)"
+        - "^Lung"
+
+  PLAN-001:
+    severity: error            # SBRT plans must be approved before export
+    params:
+      allowed_statuses: [APPROVED]
+
+  PLAN-003:
+    params:
+      min_fractions: 1
+      max_fractions: 8
+
+  PLAN-005:
+    params:
+      allowed_machines: [LINAC1]
+      require_single_machine: true
+
+  BEAM-004:
+    params:
+      allowed_energies: {PHOTON: [6]}
+
+  BEAM-005:
+    params:
+      limits: {MU: [5.0, 3000.0]}
+
+  DOSE-003:
+    severity: error            # SBRT gradients are steep: a coarse grid is not acceptable
+    params:
+      max_spacing_mm: 2.0
+
+  DOSE-004:
+    params:
+      max_percent_of_rx: 140.0   # SBRT plans are often normalised to a low isodose
+
+  DOSE-006:
+    params:
+      volume_percent: 95.0
+      min_percent_of_rx: 95.0
