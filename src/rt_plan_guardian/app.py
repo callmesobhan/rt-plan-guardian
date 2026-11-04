@@ -183,8 +183,12 @@ def main() -> None:
     error = ""
     if source == "Synthetic demo case":
         technique = st.selectbox("Technique", list(TECHNIQUES))
+        if technique is None:
+            return
         defects = [CLEAN, *(n for n, d in DEFECTS.items() if d.technique == technique)]
         defect = st.selectbox("Inject a defect", defects, help="Mutates the clean synthetic plan.")
+        if defect is None:
+            return
         if defect != CLEAN:
             st.caption(DEFECTS[defect].description)
         if st.button("Run review", type="primary", disabled=ruleset is None):
@@ -208,7 +212,8 @@ def main() -> None:
         if len(reports) > 1:
             labels = [f"{r.context.case_id} - {r.verdict.value}" for r in reports]
             picked = st.selectbox("Case", labels)
-            _render(reports[labels.index(picked)])
+            if picked is not None:
+                _render(reports[labels.index(picked)])
         else:
             _render(reports[0])
 
