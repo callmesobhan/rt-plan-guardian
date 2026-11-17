@@ -1,10 +1,18 @@
-# RT-Plan Guardian
+<div align="center">
 
-**Automated radiotherapy plan consistency & safety checker** for **photon, electron, proton/ion and brachytherapy** plans.
-Cross-checks DICOM-RT plan, structure-set and dose files against configurable, **source-cited rulesets** and produces an **auditable report that shows exactly which rules passed, failed, or could not run**.
+# RT-Plan Guardian 🛡️🏥
 
-`Python 3.10+` · `pydicom` · `DICOM-RT` · `pytest` · `Streamlit`
+**Automated Radiotherapy Plan Consistency & Safety Checker for DICOM-RT**  
+*Cross-checks photon, electron, proton/ion, and brachytherapy DICOM-RT plans, structure sets, and dose grids against source-cited rulesets*
 
+[![CI](https://github.com/callmesobhan/rt-plan-guardian/actions/workflows/ci.yml/badge.svg)](https://github.com/callmesobhan/rt-plan-guardian/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
+[![Modalities](https://img.shields.io/badge/Modalities-Photon%20%7C%20Electron%20%7C%20Proton%2FIon%20%7C%20Brachy-10b981)](#why)
+
+</div>
+
+> [!IMPORTANT]
 > **Decision-support tool, not a medical device.** It does not replace independent physics plan review or your treatment-planning system's own verification. Read [docs/safety-and-limitations.md](docs/safety-and-limitations.md) before using it near patient data.
 
 ---
