@@ -368,8 +368,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     cm_score.add_argument("--config", help="ruleset for --self-test")
     cm_score.add_argument("--checker", help="display name of the plan checker being commissioned")
-    cm_score.add_argument("--checker-version", default="", help="version string of the plan checker")
-    cm_score.add_argument("--out", help="directory to write JSON/MD/HTML commissioning certificates")
+    cm_score.add_argument(
+        "--checker-version", default="", help="version string of the plan checker"
+    )
+    cm_score.add_argument(
+        "--out", help="directory to write JSON/MD/HTML commissioning certificates"
+    )
     cm_score.add_argument("--format", default=",".join(FORMATS), help="comma list of json,md,html")
     cm_score.add_argument(
         "--min-sensitivity",

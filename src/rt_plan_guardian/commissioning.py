@@ -193,7 +193,9 @@ def sanitize_and_remint_uids(
             ref.ReferencedSOPInstanceUID = plan_uid
 
     if anonymize:
-        pid = patient_label or f"TG275-{hashlib.sha256(mutant_salt.encode()).hexdigest()[:8].upper()}"
+        pid = (
+            patient_label or f"TG275-{hashlib.sha256(mutant_salt.encode()).hexdigest()[:8].upper()}"
+        )
         for _, ds in case.datasets():
             ds.PatientID = pid
             ds.PatientName = f"COMMISSIONING^{pid}"
@@ -214,7 +216,9 @@ def _first_treatment_beam(plan: Dataset) -> Dataset | None:
 
 def _all_treatment_beams(plan: Dataset) -> list[Dataset]:
     beams = plan_beams(plan)
-    tx = [b for b in beams if str(b.get("TreatmentDeliveryType", "TREATMENT")).upper() == "TREATMENT"]
+    tx = [
+        b for b in beams if str(b.get("TreatmentDeliveryType", "TREATMENT")).upper() == "TREATMENT"
+    ]
     return tx or beams
 
 
@@ -285,11 +289,17 @@ def _m_unapproved_plan_export(case: MutableCase, salt: str) -> tuple[bool, str]:
 
 def _m_prescription_dose_bump_10pct(case: MutableCase, salt: str) -> tuple[bool, str]:
     for ref in case.plan.get("DoseReferenceSequence", []):
-        if str(ref.get("DoseReferenceType", "TARGET")) == "TARGET" and "TargetPrescriptionDose" in ref:
+        if (
+            str(ref.get("DoseReferenceType", "TARGET")) == "TARGET"
+            and "TargetPrescriptionDose" in ref
+        ):
             old = float(ref.TargetPrescriptionDose)
             new = round(old * 1.10, 4)
             ref.TargetPrescriptionDose = new
-            return True, f"Bumped TargetPrescriptionDose +10% ({old} -> {new} Gy) without updating beams/dose"
+            return (
+                True,
+                f"Bumped TargetPrescriptionDose +10% ({old} -> {new} Gy) without updating beams/dose",
+            )
     return False, "RTPLAN has no target DoseReference with TargetPrescriptionDose"
 
 
@@ -312,7 +322,10 @@ def _m_beam_dropped_from_fg(case: MutableCase, salt: str) -> tuple[bool, str]:
         return False, "requires at least 2 referenced beams in FractionGroupSequence"
     dropped = int(refs[-1].ReferencedBeamNumber)
     fgs[0].ReferencedBeamSequence = refs[:-1]
-    return True, f"Dropped beam {dropped} from FractionGroupSequence while leaving it in BeamSequence"
+    return (
+        True,
+        f"Dropped beam {dropped} from FractionGroupSequence while leaving it in BeamSequence",
+    )
 
 
 def _m_mixed_treatment_machines(case: MutableCase, salt: str) -> tuple[bool, str]:
@@ -400,7 +413,7 @@ def _m_subtle_dose_grid_half_voxel_shift(case: MutableCase, salt: str) -> tuple[
     ]
     return (
         True,
-        f"Shifted RTDOSE ImagePositionPatient by half a voxel (+{spacing[0]/2:.2f}, +{spacing[1]/2:.2f}, +{dz:.2f} mm)",
+        f"Shifted RTDOSE ImagePositionPatient by half a voxel (+{spacing[0] / 2:.2f}, +{spacing[1] / 2:.2f}, +{dz:.2f} mm)",
     )
 
 
@@ -440,12 +453,18 @@ def _m_nonplanar_contour_spike_2mm(case: MutableCase, salt: str) -> tuple[bool, 
         return False, "case has no RTSTRUCT object"
     for rc in case.struct.get("ROIContourSequence", []):
         for contour in rc.get("ContourSequence", []):
-            if str(contour.get("ContourGeometricType", "")) == "CLOSED_PLANAR" and "ContourData" in contour:
+            if (
+                str(contour.get("ContourGeometricType", "")) == "CLOSED_PLANAR"
+                and "ContourData" in contour
+            ):
                 data = [float(v) for v in contour.ContourData]
                 if len(data) >= 9:
                     data[2] = round(data[2] + 2.0, 3)
                     contour.ContourData = data
-                    return True, f"Displaced first vertex Z by +2.0 mm on ROI {rc.ReferencedROINumber}"
+                    return (
+                        True,
+                        f"Displaced first vertex Z by +2.0 mm on ROI {rc.ReferencedROINumber}",
+                    )
     return False, "RTSTRUCT has no CLOSED_PLANAR contours"
 
 
@@ -464,7 +483,10 @@ def _m_empty_oar_contour(case: MutableCase, salt: str) -> tuple[bool, str]:
 
 def _m_electron_missing_applicator(case: MutableCase, salt: str) -> tuple[bool, str]:
     for beam in _all_treatment_beams(case.plan):
-        if str(beam.get("RadiationType", "")).upper() == "ELECTRON" and "ApplicatorSequence" in beam:
+        if (
+            str(beam.get("RadiationType", "")).upper() == "ELECTRON"
+            and "ApplicatorSequence" in beam
+        ):
             del beam.ApplicatorSequence
             return True, f"Deleted ApplicatorSequence from electron beam {beam.BeamNumber}"
     return False, "plan has no ELECTRON beam with ApplicatorSequence"
@@ -488,7 +510,10 @@ def _m_ion_spot_weight_sum_drift(case: MutableCase, salt: str) -> tuple[bool, st
             if w:
                 w[0] = round(w[0] + max(1.0, 0.05 * sum(w)), 4)
                 cps[0].ScanSpotMetersetWeights = w
-                return True, f"Inflated ion beam {beam.BeamNumber} spot[0] weight without updating cumulative meterset"
+                return (
+                    True,
+                    f"Inflated ion beam {beam.BeamNumber} spot[0] weight without updating cumulative meterset",
+                )
     return False, "plan has no IonBeamSequence with ScanSpotMetersetWeights"
 
 
@@ -497,7 +522,10 @@ def _m_ion_range_shifter_undeclared(case: MutableCase, salt: str) -> tuple[bool,
         cps = list(beam.get("IonControlPointSequence", []))
         if cps and cps[0].get("RangeShifterSettingsSequence"):
             cps[0].RangeShifterSettingsSequence[0].ReferencedRangeShifterNumber = 99
-            return True, f"Pointed ion beam {beam.BeamNumber} range-shifter setting to undeclared shifter 99"
+            return (
+                True,
+                f"Pointed ion beam {beam.BeamNumber} range-shifter setting to undeclared shifter 99",
+            )
     return False, "plan has no IonBeamSequence with RangeShifterSettingsSequence"
 
 
@@ -516,7 +544,10 @@ def _m_brachy_trak_drift_10pct(case: MutableCase, salt: str) -> tuple[bool, str]
         return False, "plan has no brachy ApplicationSetupSequence with TotalReferenceAirKerma"
     old = float(setups[0].TotalReferenceAirKerma)
     setups[0].TotalReferenceAirKerma = round(old * 1.10, 6)
-    return True, f"Inflated TotalReferenceAirKerma +10% ({old} -> {float(setups[0].TotalReferenceAirKerma)})"
+    return (
+        True,
+        f"Inflated TotalReferenceAirKerma +10% ({old} -> {float(setups[0].TotalReferenceAirKerma)})",
+    )
 
 
 def _m_brachy_source_decay_stale(case: MutableCase, salt: str) -> tuple[bool, str]:
@@ -534,7 +565,10 @@ def _m_brachy_dwell_position_mismatch(case: MutableCase, salt: str) -> tuple[boo
             if len(cps) >= 4 and "ControlPointRelativePosition" in cps[3]:
                 old = float(cps[3].ControlPointRelativePosition)
                 cps[3].ControlPointRelativePosition = round(old + 1.5, 3)
-                return True, f"Shifted brachy closing dwell CP3 position by +1.5 mm ({old} -> {old + 1.5})"
+                return (
+                    True,
+                    f"Shifted brachy closing dwell CP3 position by +1.5 mm ({old} -> {old + 1.5})",
+                )
     return False, "plan has no brachy stepwise ChannelSequence"
 
 
@@ -1035,11 +1069,7 @@ def generate_commissioning_suite(
             mutant = base.copy()
             salt = f"{seed}:{base.source_label}:{spec.id}"
             seq_idx += 1
-            case_id = (
-                f"CASE_{seq_idx:03d}"
-                if blind
-                else f"{base.source_label}__{spec.id}"
-            )
+            case_id = f"CASE_{seq_idx:03d}" if blind else f"{base.source_label}__{spec.id}"
             sanitize_and_remint_uids(
                 mutant,
                 salt,
@@ -1231,10 +1261,7 @@ def run_command_adapter_on_suite(
     outcomes: dict[str, dict[str, Any]] = {}
     for entry in manifest["cases"]:
         case_path = str((suite / entry["relative_dir"]).resolve())
-        tokens = [
-            tok.replace("{case_dir}", case_path)
-            for tok in shlex.split(command_template)
-        ]
+        tokens = [tok.replace("{case_dir}", case_path) for tok in shlex.split(command_template)]
         if not any(case_path in t for t in tokens):
             tokens.append(case_path)
         proc = subprocess.run(tokens, capture_output=True, text=True, check=False)
@@ -1364,12 +1391,12 @@ def score_commissioning_suite(
         verdict_reason = "; ".join(reasons).capitalize() + "."
     elif sens < min_sensitivity or fn > 0:
         verdict = "PASS_WITH_WARNINGS"
-        verdict_reason = (
-            f"All high-risk defects and negative controls passed, but {fn} subtle/medium defect(s) were missed."
-        )
+        verdict_reason = f"All high-risk defects and negative controls passed, but {fn} subtle/medium defect(s) were missed."
     else:
         verdict = "PASS"
-        verdict_reason = "All evaluated defects detected with zero false alarms on negative controls."
+        verdict_reason = (
+            "All evaluated defects detected with zero false alarms on negative controls."
+        )
 
     certificate: dict[str, Any] = {
         "schema_version": "1.0",
