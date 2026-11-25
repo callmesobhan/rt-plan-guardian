@@ -1,21 +1,106 @@
-MIT License
+Non-Commercial Personal & Academic Research License (NC-PARL 1.0)
 
-Copyright (c) 2026 Sobhan Shahbazi
+RT-Plan-Guardian
+Copyright (c) 2026 Sobhan Shahbazi. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This Software is source-available for personal use and non-commercial academic
+or scientific research with attribution. Commercial use is strictly prohibited
+without a separate written commercial license from the Licensor.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. DEFINITIONS
+
+"Software" means the source code, scripts, binaries, configuration files,
+documentation, examples, and tests in this repository (https://github.com/callmesobhan/rt-plan-guardian), excluding
+Third-Party Material (Section 5).
+
+"Licensor" means Sobhan Shahbazi (GitHub: @callmesobhan).
+
+"You" means any individual or entity exercising permissions under this License.
+
+"Commercial Use" means any use of the Software, in whole or in part, directly
+or indirectly, primarily intended for or directed toward commercial advantage,
+monetary compensation, revenue generation, or business operations. Commercial
+Use includes, without limitation:
+  (a) use by or within a for-profit company or commercial organization
+      (including internal R&D, QA, production, or consulting);
+  (b) incorporating the Software into a paid or commercial product, service,
+      SaaS platform, API, or clinical/commercial workflow;
+  (c) client work, commercial teaching/training, or paid grading/assessment;
+  (d) using the Software, its outputs, or its test suites to train, fine-tune,
+      or evaluate commercial AI/ML models or competing commercial products.
+
+2. PERMITTED USES (FREE OF CHARGE)
+
+Subject to the terms and conditions of this License, the Licensor grants You a
+non-exclusive, worldwide, royalty-free, revocable, non-transferable,
+non-sublicensable license to use, run, copy, and modify the Software strictly
+for the following non-commercial purposes:
+
+  (a) Personal Use: Private, non-commercial personal learning, study,
+      experimentation, evaluation, or hobby use on devices You own or control.
+
+  (b) Academic & Non-Commercial Research (Citation Required): Non-commercial
+      research, academic study, or public-interest scientific evaluation by
+      individuals, universities, or non-profit research institutions, PROVIDED
+      THAT any publication, preprint, thesis, dissertation, conference paper,
+      poster, technical report, benchmark, presentation, or publicly shared
+      derivative research work that uses, builds upon, or evaluates the
+      Software includes a clear citation crediting the Licensor and repository:
+
+          Sobhan Shahbazi (2026). rt-plan-guardian.
+          Available at: https://github.com/callmesobhan/rt-plan-guardian
+
+3. RESTRICTIONS & PROHIBITED USES
+
+Unless You hold a separate written commercial license signed by the Licensor,
+You may NOT:
+  (a) engage in any Commercial Use of the Software or derivative works;
+  (b) sell, rent, lease, sublicense, host as a commercial service or API, or
+      otherwise monetize the Software or its outputs;
+  (c) redistribute modified or unmodified copies of the Software for
+      commercial purposes;
+  (d) remove, obscure, or alter any copyright, license, or attribution notices
+      in the Software or its documentation.
+
+If You share non-commercial research modifications publicly, You must retain
+this License intact and clearly mark Your changes.
+
+4. COMMERCIAL LICENSING & CONTACT
+
+Commercial licenses and enterprise permissions are available directly from the
+Licensor. To request a commercial license, open an issue on the repository or
+contact Sobhan Shahbazi via GitHub (@callmesobhan):
+  https://github.com/callmesobhan/rt-plan-guardian
+
+5. THIRD-PARTY MATERIAL
+
+This License applies only to original code, documentation, and artifacts
+authored by the Licensor. Third-party libraries, datasets, open-access papers,
+AI models, and external materials referenced or bundled alongside the Software
+(including any items listed in NOTICE, ATTRIBUTION.md, or docs/) remain under
+their own respective licenses.
+
+6. OWNERSHIP & TERMINATION
+
+The Licensor retains all right, title, and interest in and to the Software.
+Your rights under this License terminate automatically and without notice if
+You breach any of its terms, upon which You must immediately cease all use
+and delete all copies of the Software. Sections 3, 5, 6, 7, and 8 survive
+termination.
+
+7. NO WARRANTY
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+FITNESS FOR A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. THE SOFTWARE
+IS NOT A CERTIFIED MEDICAL DEVICE OR REGULATED CLINICAL SYSTEM; DO NOT RELY ON
+IT SOLELY FOR CLINICAL, SAFETY, LEGAL, OR FINANCIAL DECISIONS WITHOUT
+INDEPENDENT QUALIFIED VERIFICATION.
+
+8. LIMITATION OF LIABILITY
+
+IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING LOST PROFITS, LOST
+DATA, OR BUSINESS INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE OF OR
+INABILITY TO USE THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.

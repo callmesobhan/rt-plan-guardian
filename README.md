@@ -6,7 +6,7 @@
 *Cross-checks photon, electron, proton/ion, and brachytherapy DICOM-RT plans, structure sets, and dose grids against source-cited rulesets*
 
 [![CI](https://github.com/callmesobhan/rt-plan-guardian/actions/workflows/ci.yml/badge.svg)](https://github.com/callmesobhan/rt-plan-guardian/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-indigo.svg)](LICENSE)
+[![License: Non-Commercial (Research & Personal)](https://img.shields.io/badge/License-Non--Commercial%20(Research%20%26%20Personal)-f59e0b.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](pyproject.toml)
 [![Modalities](https://img.shields.io/badge/Modalities-Photon%20%7C%20Electron%20%7C%20Proton%2FIon%20%7C%20Brachy-10b981)](#why)
 
@@ -203,4 +203,4 @@ Planned: CT ↔ structure-set linkage · per-beam dose files · SIB and multi-ph
 
 ## License
 
-MIT - see [LICENSE](LICENSE). Contributions welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). **Never commit or attach real patient data.**
+**Non-Commercial Personal & Academic Research License (NC-PARL 1.0)** — see [LICENSE](LICENSE). Free for personal use and non-commercial academic/scientific research with citation (`Sobhan Shahbazi (2026). rt-plan-guardian. https://github.com/callmesobhan/rt-plan-guardian`). Commercial use requires a separate written license. Contributions welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). **Never commit or attach real patient data.**
