@@ -33,8 +33,16 @@ rtpg check demo_case --out reports           # exit code 0 = pass
 rtpg demo demo_bad --defect prescription_mismatch && rtpg check demo_bad   # exit code 1
 rtpg check /path/to/export_folder            # several plans in one folder -> one review per case
 rtpg check case/ --config hytec_brain_srs    # a built-in, source-cited ruleset (see `rtpg rulesets`)
+rtpg commission generate case/ --out tg275_suite --blind  # vendor-neutral TG-275 commissioning suite
+rtpg commission score tg275_suite --self-test --out cert  # score rtpg or any commercial checker
 rtpg app                                     # Streamlit UI (upload files or run the demo)
 ```
+
+## Vendor-neutral TG-275 plan-checker commissioning harness
+
+Commercial automated plan checkers (ClearCheck, SunCHECK PlanCHECK, Mobius3D, ESAPI scripts) do not ship an independent adversarial benchmark to prove their own sensitivity and specificity during AAPM TG-275 / MPPG 11.a commissioning.
+
+`rtpg commission` takes **any** anonymized clinical DICOM-RT plan (or multi-modality synthetic baseline), remints collision-free UIDs, strips PHI, injects 32 obvious defects, clinically subtle "silent killers" (1 mm MLC leaf overlap, stale revision UIDs, half-voxel dose-grid offsets, +10% brachy TRAK drift, proton spot-weight drift) and negative controls, and scores **any** external plan checker (via CSV/JSON or `--runner-cmd`) into a SHA-256-hashed JSON/Markdown/HTML commissioning certificate with Wilson 95% confidence intervals and a false-negative blind-spot register. See [docs/commissioning-harness.md](docs/commissioning-harness.md).
 
 ### Real output on real data
 

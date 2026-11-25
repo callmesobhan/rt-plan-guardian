@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TG-275 Plan-Checker Commissioning Certificate - {{ c.verdict }}</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --card: #ffffff; --ink: #1b2330; --muted: #5b6577; --line: #dde2ea;
+    --pass: #137a3d; --pass-bg: #e3f4ea; --fail: #b42318; --fail-bg: #fde8e6;
+    --warn: #8a5a00; --warn-bg: #fff3d6; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11151c; --card: #1a202b; --ink: #e8ecf3; --muted: #9aa5b8; --line: #2c3442;
+      --pass: #6fdc9a; --pass-bg: #123222; --fail: #ff8d82; --fail-bg: #3a1815;
+      --warn: #f4c65a; --warn-bg: #3a2d0e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 28px 0 10px; }
+  .sub { color: var(--muted); margin: 0 0 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+  .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-weight: 700; font-size: 12px; letter-spacing: .03em; }
+  .PASS, .TP, .TN { background: var(--pass-bg); color: var(--pass); }
+  .FAIL, .FN, .FP, .INCOMPLETE { background: var(--fail-bg); color: var(--fail); }
+  .PASS_WITH_WARNINGS { background: var(--warn-bg); color: var(--warn); }
+  .chips { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .chip { border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; min-width: 140px; }
+  .chip b { display: block; font-size: 18px; }
+  .chip span { color: var(--muted); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  .mono { font-family: var(--mono); font-size: 12px; word-break: break-all; }
+  .scroll { overflow-x: auto; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>AAPM TG-275 Plan-Checker Commissioning Certificate</h1>
+  <p class="sub">
+    System under test: <strong>{{ c.checker.name }} {{ c.checker.version }}</strong> &middot;
+    Suite: <span class="mono">{{ c.suite.source_mode }} / {{ c.suite.profile }}</span> &middot;
+    Generated {{ c.generated_at }}
+  </p>
+
+  <section class="card">
+    <div>
+      <span class="badge {{ c.verdict }}">{{ c.verdict.replace('_', ' ') }}</span>
+      <span style="margin-left: 10px">{{ c.verdict_reason }}</span>
+    </div>
+    <div class="chips">
+      <div class="chip"><b>{{ fmt_pct(c.metrics.sensitivity) }}</b><span>Sensitivity (TPR)</span></div>
+      <div class="chip"><b>{{ fmt_pct(c.metrics.specificity) }}</b><span>Specificity (TNR)</span></div>
+      <div class="chip"><b>{{ fmt_pct(c.metrics.high_risk_recall) }}</b><span>High-Risk TG-275 Recall</span></div>
+      <div class="chip"><b>{{ fmt_pct(c.metrics.subtle_recall) }}</b><span>Subtle-Defect Recall</span></div>
+      <div class="chip"><b>{{ "%.4f"|format(c.metrics.f1) }}</b><span>F1 Score</span></div>
+    </div>
+  </section>
+
+  <h2>False-Negative Blind-Spot Register ({{ c.blind_spots|length }})</h2>
+  <div class="card scroll">
+    {% if not c.blind_spots %}
+      <p>No missed defects.</p>
+    {% else %}
+    <table>
+      <tr><th>Case</th><th>Mutation</th><th>Risk</th><th>Subtlety</th><th>Clinical Impact</th><th>Reference</th></tr>
+      {% for b in c.blind_spots %}
+      <tr>
+        <td class="mono">{{ b.case_id }}</td>
+        <td class="mono">{{ b.mutation_id }}</td>
+        <td>{{ b.risk_tier|upper }}</td>
+        <td>{{ b.subtlety }}</td>
+        <td>{{ b.clinical_impact }}</td>
+        <td>{{ b.tg275_reference }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+  </div>
+
+  <h2>Complete Commissioning Matrix ({{ c.cases|length }} cases)</h2>
+  <div class="card scroll">
+    <table>
+      <tr><th>Case</th><th>Mutation</th><th>Category</th><th>Risk</th><th>Expected</th><th>Observed</th><th>Outcome</th><th>Checker Message</th></tr>
+      {% for row in c.cases %}
+      <tr>
+        <td class="mono">{{ row.case_id }}</td>
+        <td class="mono">{{ row.mutation_id }}</td>
+        <td>{{ row.category }}</td>
+        <td>{{ row.risk_tier }}</td>
+        <td>{{ "DETECT" if row.expected_detection else "CLEAN" }}</td>
+        <td>{{ "FLAGGED" if row.observed_detected else "PASS" }}</td>
+        <td><span class="badge {{ row.outcome }}">{{ row.outcome }}</span></td>
+        <td class="mono">{{ row.checker_message }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <section class="card">
+    <strong>Cryptographic Provenance</strong>
+    <p class="mono">Suite SHA-256: {{ c.suite.suite_sha256 }}<br>Certificate SHA-256: {{ c.content_sha256 }}</p>
+  </section>
+
+  <footer>
+    Generated by {{ c.tool.name }} {{ c.tool.version }}. Vendor-neutral AAPM TG-275 commissioning utility; clinical acceptance remains the responsibility of a Qualified Medical Physicist.
+  </footer>
+</main>
+</body>
+</html>

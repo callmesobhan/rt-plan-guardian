@@ -20,6 +20,17 @@ from pathlib import Path
 
 from . import __version__
 from .catalog import catalog_markdown, catalog_table, template_yaml
+from .commissioning import (
+    MUTATION_CATALOG,
+    PROFILES,
+    generate_commissioning_suite,
+    load_external_results,
+    render_commissioning_markdown,
+    run_command_adapter_on_suite,
+    run_rtpg_on_suite,
+    score_commissioning_suite,
+    write_commissioning_reports,
+)
 from .config import builtin_rulesets, load_ruleset
 from .engine import ReviewReport, run_review
 from .errors import GuardianError
@@ -160,6 +171,85 @@ def _cmd_demo(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _cmd_commission_list(_: argparse.Namespace) -> int:
+    width = max(len(m) for m in MUTATION_CATALOG)
+    for mid, spec in MUTATION_CATALOG.items():
+        print(
+            f"{mid:<{width}}  [{spec.category:12} | {spec.risk_tier:7} | {spec.subtlety:7}] "
+            f"{spec.title}"
+        )
+    return EXIT_OK
+
+
+def _cmd_commission_generate(args: argparse.Namespace) -> int:
+    mutation_ids = (
+        [m.strip() for m in args.mutations.split(",") if m.strip()] if args.mutations else None
+    )
+    manifest = generate_commissioning_suite(
+        args.out,
+        source_paths=args.source or None,
+        technique=args.technique,
+        profile=args.profile,
+        mutation_ids=mutation_ids,
+        anonymize=not args.keep_phi,
+        blind=args.blind,
+        seed=args.seed,
+    )
+    s = manifest["summary"]
+    print(f"Generated TG-275 commissioning suite in {args.out}")
+    print(
+        f"  Cases: {s['total_cases']} ({s['positive_defects']} defects, "
+        f"{s['negative_controls']} negative controls, {s['high_risk_defects']} high-risk, "
+        f"{s['subtle_defects']} subtle; {s['skipped_inapplicable']} skipped inapplicable)"
+    )
+    print(f"  Suite SHA-256: {manifest['suite_sha256']}")
+    print(f"  Results template: {Path(args.out) / 'results_template.csv'}")
+    return EXIT_OK
+
+
+def _cmd_commission_score(args: argparse.Namespace) -> int:
+    if args.self_test:
+        observations = run_rtpg_on_suite(args.suite_dir, config=args.config)
+        checker_name = args.checker or "RT-Plan Guardian"
+        checker_version = args.checker_version or __version__
+    elif args.runner_cmd:
+        observations = run_command_adapter_on_suite(args.suite_dir, args.runner_cmd)
+        checker_name = args.checker or args.runner_cmd.split()[0]
+        checker_version = args.checker_version or ""
+    elif args.results:
+        observations = load_external_results(args.results)
+        checker_name = args.checker or "External Plan Checker"
+        checker_version = args.checker_version or ""
+    else:
+        print(
+            "error: commission score requires --results, --runner-cmd, or --self-test",
+            file=sys.stderr,
+        )
+        return EXIT_USAGE
+
+    cert = score_commissioning_suite(
+        args.suite_dir,
+        observations,
+        checker_name=checker_name,
+        checker_version=checker_version,
+        min_sensitivity=args.min_sensitivity,
+    )
+    print(render_commissioning_markdown(cert))
+    if args.out:
+        formats = tuple(f.strip() for f in args.format.split(",") if f.strip())
+        for path in write_commissioning_reports(cert, args.out, formats=formats):
+            print(f"Commissioning certificate written: {path}")
+
+    verdict = cert["verdict"]
+    if verdict == "FAIL":
+        return EXIT_FAIL
+    if verdict == "INCOMPLETE":
+        return EXIT_INCOMPLETE
+    if verdict == "PASS_WITH_WARNINGS" and args.fail_on == "warning":
+        return EXIT_FAIL
+    return EXIT_OK
+
+
 def _cmd_app(_: argparse.Namespace) -> int:
     if importlib.util.find_spec("streamlit") is None:
         print(
@@ -215,6 +305,85 @@ def build_parser() -> argparse.ArgumentParser:
 
     a = sub.add_parser("app", help="launch the Streamlit web app")
     a.set_defaults(func=_cmd_app)
+
+    cm = sub.add_parser(
+        "commission",
+        help="vendor-neutral AAPM TG-275 DICOM-RT mutation & plan-checker commissioning harness",
+    )
+    cm_sub = cm.add_subparsers(dest="commission_command", required=True)
+
+    cm_list = cm_sub.add_parser("list", help="list available commissioning mutations and controls")
+    cm_list.set_defaults(func=_cmd_commission_list)
+
+    cm_gen = cm_sub.add_parser(
+        "generate",
+        help="generate a UID-clean, PHI-stripped TG-275 commissioning suite from any DICOM-RT case or synthetic baseline",
+    )
+    cm_gen.add_argument(
+        "source",
+        nargs="*",
+        help="optional anonymized clinical DICOM-RT files/folder (omit to use synthetic baseline)",
+    )
+    cm_gen.add_argument("--out", required=True, help="output directory for the commissioning suite")
+    cm_gen.add_argument(
+        "--technique",
+        choices=[*TECHNIQUES, "all"],
+        default="photon",
+        help="synthetic baseline technique when no source DICOM paths are supplied",
+    )
+    cm_gen.add_argument(
+        "--profile",
+        choices=PROFILES,
+        default="all",
+        help="mutation profile (all, tg275-core, subtle, controls)",
+    )
+    cm_gen.add_argument("--mutations", help="comma-separated list of specific mutation ids")
+    cm_gen.add_argument(
+        "--keep-phi",
+        action="store_true",
+        help="keep original PatientID/Name tags instead of anonymizing mutants",
+    )
+    cm_gen.add_argument(
+        "--blind",
+        action="store_true",
+        help="assign neutral CASE_001..CASE_NNN folder names for blinded commissioning",
+    )
+    cm_gen.add_argument("--seed", type=int, default=0, help="deterministic seed for UID reminting")
+    cm_gen.set_defaults(func=_cmd_commission_generate)
+
+    cm_score = cm_sub.add_parser(
+        "score",
+        help="score any external plan checker (or rtpg via --self-test) and emit a TG-275 certificate",
+    )
+    cm_score.add_argument("suite_dir", help="suite directory created by `rtpg commission generate`")
+    cm_score.add_argument("--results", help="CSV or JSON file with external checker outcomes")
+    cm_score.add_argument(
+        "--runner-cmd",
+        help="CLI command template to run per mutant (e.g. 'my_checker {case_dir}'; exit 0=clean)",
+    )
+    cm_score.add_argument(
+        "--self-test",
+        action="store_true",
+        help="score RT-Plan Guardian itself against the commissioning suite",
+    )
+    cm_score.add_argument("--config", help="ruleset for --self-test")
+    cm_score.add_argument("--checker", help="display name of the plan checker being commissioned")
+    cm_score.add_argument("--checker-version", default="", help="version string of the plan checker")
+    cm_score.add_argument("--out", help="directory to write JSON/MD/HTML commissioning certificates")
+    cm_score.add_argument("--format", default=",".join(FORMATS), help="comma list of json,md,html")
+    cm_score.add_argument(
+        "--min-sensitivity",
+        type=float,
+        default=0.85,
+        help="minimum overall sensitivity required for clean PASS (default: 0.85)",
+    )
+    cm_score.add_argument(
+        "--fail-on",
+        choices=["error", "warning"],
+        default="error",
+        help="exit 1 on PASS_WITH_WARNINGS too",
+    )
+    cm_score.set_defaults(func=_cmd_commission_score)
     return p
 
 
